@@ -9,7 +9,7 @@ import ListItemText from "@mui/material/ListItemText";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import Avatar from "@mui/material/Avatar";
 import { useNavigate } from "react-router";
- 
+import socket from "../components/Socket";
 import { firestore, auth } from "../firebase";
 import {
     addDoc,
@@ -18,6 +18,9 @@ import {
     orderBy,
     query,
 } from "firebase/firestore";
+import posIcon from './positive.png';
+import neuIcon from './neutral.png';
+import negIcon from './negative.png';
  
 function UsersComponent(props) {
     const handleToggle = (username, userId) => {
@@ -75,6 +78,46 @@ export default function Home() {
     const user = auth.currentUser;
  
     const navigate = useNavigate();
+
+    const [sentiment, setSentiment] = useState('');
+
+    const handleSentimentAnalysis = (sentiment) => {
+        // setSentiment(sentiment);
+        // console.log(sentiment);
+
+        let sentimentIcon
+        switch(sentiment){
+            case 'Positive':
+                sentimentIcon = posIcon;
+                break;
+            case 'Neutral':
+                sentimentIcon = neuIcon;
+                break;
+            case 'Negative':
+                sentimentIcon = negIcon;
+                break;
+            default:
+                sentimentIcon = null;
+                break;
+        }
+
+        setSentiment(sentimentIcon);
+        console.log(sentiment)
+    };
+
+    useEffect(() => {
+        socket.on("connect", function(){
+            console.log("connected")
+        })
+
+        // Event handler for "output" event
+        socket.on("output", handleSentimentAnalysis);
+
+        // Clean up the event listener when the component unmounts
+        return () => {
+            socket.off("output", handleSentimentAnalysis);
+        };
+    }, []); // Ensure this effect runs only once
  
     useEffect(() => {
         const unsub = onSnapshot(collection(firestore, "users"), (snapshot) => {
@@ -104,6 +147,13 @@ export default function Home() {
                             messages: doc.data(),
                         }))
                     );
+
+                    // Emit the message to the server using socket.io
+                    const latestMessage = snapshot.docs[snapshot.docs.length - 1]?.data()?.message;
+                    if (latestMessage) {
+                        socket.emit("input", { message: latestMessage });
+                    }
+
                 }
             );
             return unsub;
@@ -152,7 +202,7 @@ export default function Home() {
         }
         setChatMessage("");
     };
- 
+
     return (
         <div style={root}>
             <Paper style={left}>
@@ -233,6 +283,12 @@ export default function Home() {
                 </div>
  
                 <div style={{ width: "100%", display: "flex", flex: 0.08 }}>
+                {sentiment && (
+                    <div>
+                        <img src={sentiment} alt="Sentiment Icon" />
+                    </div>
+                )}
+                    {/* <h2>Sentiment Analysis</h2> */}
                     <input
                         value={chatMessage}
                         onChange={(e) => setChatMessage(e.target.value)}
@@ -240,6 +296,7 @@ export default function Home() {
                         type="text"
                         placeholder="Type message..."
                     />
+                    {/* {sentiment && <p>Sentiment: {sentiment}</p>} */}
                     <IconButton onClick={sendMessage}>
                         <SendIcon style={{ margin: 10 }} />
                     </IconButton>

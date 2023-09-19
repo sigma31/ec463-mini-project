@@ -14,3 +14,13 @@ The link to our JIRA board used for development is here: https://pranetsh.atlass
 ### ` npm start `
 
 Run command npm start when in terminal to run the project.
+
+## Design Decisions
+
+Design decisions documented here instead of a wiki because repository was initially private and GitHub Free does not allow for wikis with private repos.
+
+Initially React Native was considered as a possible direction. However, setup of the development environment as well as other design decisions resulted in pivoting to a React application.
+
+Firebase was used as backend required was not complex enough to consider using something like Flask to create one by ourselves. Instead Firebase was used for Google login authentication as well as for storage in Google Firestore. It was easier to use a BaaS.
+
+React was used for frontend because we were most familiar with it and using the tutorials we were able to figure out how to use various React Hooks to make a functional frontend.

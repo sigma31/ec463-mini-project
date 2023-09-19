@@ -1,68 +1,68 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
+from flask_socketio import SocketIO, emit
+from flask_cors import CORS, cross_origin
 import tweepy
 from textblob import TextBlob
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = "riya"
+CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*", transports=["websocket"])
 
 # Set your Twitter API keys (replace with your actual keys)
-api_key = 'YOUR_API_KEY'
-api_secret_key = 'YOUR_API_SECRET_KEY'
-access_token = 'YOUR_ACCESS_TOKEN'
-access_token_secret = 'YOUR_ACCESS_TOKEN_SECRET'
+api_key = '1ObNQiIMGpQW6g4LWa6h3SPDv'
+api_secret_key = 'MFPtAHZ7nF21BRSxJ0cBQpI3QBX0PzJtpk2vY5fAw2Gs6nyQqB'
+access_token = '1700567928695898112-p1qdPCtVLQZfzSdYNdt96N3aeWMXD1'
+access_token_secret = 'OKcanCi6ycWsSUD7qO4uQm59O3galsW7ucezno2ruq71Q'
 
 # Authenticate with Twitter
 auth = tweepy.OAuthHandler(api_key, api_secret_key)
 auth.set_access_token(access_token, access_token_secret)
 twitter_api = tweepy.API(auth)
 
-# Function to analyze sentiment
+
+
+@app.route("/")
+def page():
+    return "<h1> The Server is Working </h1>"
+
+@socketio.on("input")
 def analyze_sentiment(tweet_text):
-    # Analyze the sentiment of a tweet using TextBlob
+    tweet_text = tweet_text["message"]
     analysis = TextBlob(tweet_text)
     sentiment_polarity = analysis.sentiment.polarity
 
-    # Determine the mood based on sentiment polarity
     if sentiment_polarity > 0:
-        return "Positive"
+        emit("output", "Positive")
     elif sentiment_polarity < 0:
-        return "Negative"
+        emit("output", "Negative")
     else:
-        return "Neutral"
+        emit("output", "Neutral")
 
-# API endpoint to analyze a user's Twitter mood
-@app.route('/analyze_mood', methods=['POST'])
-def analyze_mood():
-    try:
-        # Get the JSON data from the request
-        data = request.get_json()
-        
-        # Extract the Twitter username from the JSON data
-        twitter_username = data.get('username', '')
 
-        # Check if a username was provided
-        if not twitter_username:
-            return jsonify({'error': 'Twitter username not provided'})
-
-        # Retrieve the user's recent tweets from Twitter API
-        user_tweets = twitter_api.user_timeline(screen_name=twitter_username, count=10)
-
-        # Analyze the mood of each tweet
-        mood_data = {}
-        for tweet in user_tweets:
-            tweet_text = tweet.text
-            mood = analyze_sentiment(tweet_text)
-            mood_data[tweet.id] = mood
-
-        # Return the mood analysis results as JSON response
-        return jsonify(mood_data)
-    except Exception as e:
-        # Handle exceptions (e.g., Twitter API errors) and return an error response
-        return jsonify({'error': str(e)})
-
-# Error handler for "Method Not Allowed" (HTTP 405)
-@app.errorhandler(405)
-def method_not_allowed(e):
-    return jsonify({'error': 'Method Not Allowed'}), 405
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)
+    
+# Route for sentiment analysis of a chat message
+#@app.route('/analyze_sentiment', methods=['POST'])
+#def analyze_sentiment_endpoint():
+#    try:
+#        # Get the JSON data from the request
+#        data = request.get_json()
+#        
+#        # Extract the message text from the JSON data
+#        message_text = data.get('message', '')
+#
+#        # Check if a message was provided
+#        if not message_text:
+#            return jsonify({'error': 'Message not provided'})
+#
+#        # Analyze the sentiment of the message
+#        sentiment = analyze_sentiment(message_text)
+#
+#        return jsonify({'sentiment': sentiment})
+#    except Exception as e:
+#        return jsonify({'error': str(e)})
+
+# ... (the rest of your code)

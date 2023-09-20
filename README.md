@@ -1,5 +1,8 @@
 # ec463-mini-project
 
+## Video Demo Link
+Youtube- https://drive.google.com/file/d/1gh6rS_f-21t7SuxcNhCLY2tn9gAzylK9/view?usp=sharing
+
 ## Sources
 Sources for code:
 1. Followed this Youtube video to setup a basic chat application: https://youtu.be/zQyrwxMPm88?si=3-XAQjReVSC51Ojy
